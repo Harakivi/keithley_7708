@@ -181,7 +181,7 @@
     <value>Need to select pair</value>
   </data>
   <data name="ohm" xml:space="preserve">
-    <value>Ω</value>
+    <value>Ohm</value>
   </data>
   <data name="openSession" xml:space="preserve">
     <value>Open Session</value>

@@ -636,4 +636,10 @@
         gA///wAA////////AAD///////8AAP///////wAA////////AAD///////8AAP///////wAA
 </value>
   </data>
+  <data name="minLabel.Text" xml:space="preserve">
+    <value>м.</value>
+  </data>
+  <data name="secLabel.Text" xml:space="preserve">
+    <value>с.</value>
+  </data>
 </root>

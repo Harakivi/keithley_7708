@@ -56,7 +56,7 @@ namespace keithley
         private void modeSet()
         {
             rangeComboBoxSetup();
-            rangeComboBox.SelectedItem = "AUTO ON";
+            rangeComboBox.SelectedItem = channel.range;
             switch ((string)modeComboBox.SelectedItem)
             {
                 case "ACV":
@@ -111,7 +111,7 @@ namespace keithley
                     shuntLabel.Visible = true;
                     shuntVal.Visible = true;
                     break;
-                case "Ω4":
+                case "Ohm4":
                     Size = new Size(232, 325);
                     okBtn.Location = new Point(118, 253);
                     cnlBtn.Location = new Point(27, 253);
@@ -120,6 +120,9 @@ namespace keithley
                     bwLabel.Visible = false;
                     bwcomboBox.Visible = false;
                     bwLabelVal.Visible = false;
+                    shuntLabel.Visible = false;
+                    shuntVal.Visible = false;
+                    shuntVal.Text = "0";
                     pairComboBoxSetup();
                     break;
                 //case "PERIOD":
@@ -159,7 +162,7 @@ namespace keithley
             {
                 MessageBox.Show(adRes.needMode);
             }
-            else if("Ω4" == (string)modeComboBox.SelectedItem && null == avaliablePairList.SelectedItem)
+            else if("Ohm4" == (string)modeComboBox.SelectedItem && null == avaliablePairList.SelectedItem)
             {
                 MessageBox.Show(adRes.needPair);
             }
@@ -182,7 +185,7 @@ namespace keithley
                 channel.shuntRes = shuntVal.Text;
                 switch ((string)modeComboBox.SelectedItem)
                 {
-                    case "Ω4":
+                    case "Ohm4":
                         channel.Pair = (string)avaliablePairList.SelectedItem;
                         channel.thrVoltage = null;
                         break;
@@ -269,12 +272,12 @@ namespace keithley
                     rangeComboBox.Items.AddRange(acranges);
                     rangeLabelVal.Text = adRes.volt;
                     break;
-                case "Ω2":
+                case "Ohm2":
                     string[] resranges = { "AUTO ON", " 100", " 1k", " 10k", " 100k", " 1M", " 10M", " 100M" };
                     rangeComboBox.Items.AddRange(resranges);
                     rangeLabelVal.Text = adRes.ohm;
                     break;
-                case "Ω4":
+                case "Ohm4":
                     string[] fresranges = { "AUTO ON", " 100", " 1k", " 10k", " 100k", " 1M", " 10M", " 100M" };
                     rangeComboBox.Items.AddRange(fresranges);
                     rangeLabelVal.Text = adRes.ohm;
@@ -304,10 +307,6 @@ namespace keithley
                         flagContinue = true;
                         break;
                     }
-                    else if(channels[k].portAddr == i.ToString() || channels[k].Pair == i.ToString() && channel.Pair != null)
-                    {
-
-                    }
                 }
                 if (!flagContinue)
                 {
@@ -323,12 +322,12 @@ namespace keithley
         {
             if(Convert.ToInt16(channel.portAddr) <= 120 && Convert.ToInt16(channel.portAddr) >= 101)
             {
-                string[] inputChan = { "DCV", "ACV", "DCI", "ACI", "Ω2", "Ω4" };
+                string[] inputChan = { "DCV", "ACV", "DCI", "ACI", "Ohm2", "Ohm4" };
                 modeComboBox.Items.AddRange(inputChan);
             }
             else
             {
-                string[] inputChan = { "DCV", "ACV", "DCI", "ACI", "Ω2" };
+                string[] inputChan = { "DCV", "ACV", "DCI", "ACI", "Ohm2" };
                 modeComboBox.Items.AddRange(inputChan);
             }
         }

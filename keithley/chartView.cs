@@ -180,6 +180,10 @@ namespace keithley
 
         private void chartScaleLabel()
         {
+            if(double.IsNaN(chart1.ChartAreas[0].AxisX.ScaleView.ViewMinimum) || double.IsNaN(chart1.ChartAreas[0].AxisX.ScaleView.ViewMaximum))
+            {
+                chart1.ChartAreas[0].AxisX.ScaleView.ZoomReset();
+            }
             DateTime minDate = DateTime.FromOADate(chart1.ChartAreas[0].AxisX.ScaleView.ViewMinimum);
             DateTime maxDate = DateTime.FromOADate(chart1.ChartAreas[0].AxisX.ScaleView.ViewMaximum);
             if ((maxDate - minDate).TotalDays >= 1)

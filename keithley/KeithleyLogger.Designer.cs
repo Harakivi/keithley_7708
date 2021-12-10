@@ -196,11 +196,6 @@
             0,
             0,
             0});
-            this.secondsNumeric.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
             this.secondsNumeric.Name = "secondsNumeric";
             this.secondsNumeric.Value = new decimal(new int[] {
             1,

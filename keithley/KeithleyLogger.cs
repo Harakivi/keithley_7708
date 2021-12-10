@@ -1,4 +1,4 @@
-﻿using NationalInstruments.NI4882;
+﻿//using NationalInstruments.NI4882;
 using System;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
@@ -48,8 +48,8 @@ namespace keithley
         {
             if (createTimerBtn.Text == adRes.strRecord && InitializeTimer())
             {
-                mbSession.RawIO.Write("DISP:TEXT:DATA 'LOG'");
-                mbSession.RawIO.Write("DISP:TEXT:STAT ON");
+                //mbSession.RawIO.Write("DISP:TEXT:DATA 'LOG'");
+                //mbSession.RawIO.Write("DISP:TEXT:STAT ON");
                 notifyIcon.Visible = true;
                 createTimerBtn.Text = adRes.stpRecord;
                 timerEnbToolStripMenuItem.Text = adRes.stpRecord;
@@ -109,11 +109,16 @@ namespace keithley
         {
             try
             {
-                aTimer = new System.Windows.Forms.Timer();
-                aTimer.Interval = timerInterval;
-                aTimer.Tick += new EventHandler(Timer_Tick);
-                aTimer.Enabled = true;
-                return true;
+                if(0 != timerInterval)
+                {
+                    aTimer = new System.Windows.Forms.Timer();
+                    aTimer.Interval = timerInterval;
+                    aTimer.Tick += new EventHandler(Timer_Tick);
+                    aTimer.Enabled = true;
+                    return true;
+                }
+                MessageBox.Show(adRes.incrTime);
+                return false;
             }
             catch
             {
@@ -152,7 +157,12 @@ namespace keithley
                         {
                             readValue = await Task.Run(() => channels[i].readValue(mbSession, channels[i - 1]));
                         }
-                        channels[i].AddXY(thisChanDate, Convert.ToDouble(readValue));
+                        double result = double.NaN;
+                        if(double.TryParse(readValue, out result))
+                        {
+                            channels[i].AddXY(thisChanDate, result);
+                        }
+                        
                         sw.Write(thisChanDate.ToString(CultureInfo.GetCultureInfo("ru-RU")) + "\t");
                         sw.Write(readValue + "\t");
                         sw.Write(channels[i].Function + "\t");
@@ -167,6 +177,7 @@ namespace keithley
                 MessageBox.Show(adRes.incrTime);
             }
             //documentToSave.Save(savePath);
+            Thread.Sleep(500);
             writeFlag = false;
         }
 
@@ -545,10 +556,10 @@ namespace keithley
                 case "ACV":
                     Value = readACV(mbSession, prevChan);
                     break;
-                case "Ω2":
+                case "Ohm2":
                     Value = readRES(mbSession, prevChan);
                     break;
-                case "Ω4":
+                case "Ohm4":
                     Value = readFRES(mbSession, prevChan);
                     break;
                 case "DCI":
@@ -595,14 +606,14 @@ namespace keithley
                         return true;
                     }
                     return false;
-                case "Ω2":
+                case "Ohm2":
                     Value = readRES(mbSession, prevChan);
                     if (Value != null)
                     {
                         return true;
                     }
                     return false;
-                case "Ω4":
+                case "Ohm4":
                     Value = readFRES(mbSession, prevChan);
                     if (Value != null)
                     {
@@ -646,7 +657,9 @@ namespace keithley
             try
             {
                 mbSession.RawIO.Write("ROUT:OPEN:ALL");
+                Thread.Sleep(20);
                 mbSession.RawIO.Write($"ROUT:MULT:CLOS (@{portAddr},143)");
+                Thread.Sleep(20);
                 if (this.Function != prevChan.Function)
                 {
                     mbSession.RawIO.Write("SENS:FUNC 'VOLT:DC'");
@@ -663,16 +676,24 @@ namespace keithley
                 {
                     mbSession.RawIO.Write($":SENS:VOLT:DC:AVER:STAT {FILT}");
                 }
-                mbSession.RawIO.Write("DATA:FRESH?");
-                //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
-                string readStr = mbSession.RawIO.ReadString();
-                //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
-                string[] separator = { "," };
-                string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string[] separator2 = { "VDC" };
-                nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
-                nameAr[0] = nameAr[0].Replace(".", ",");
-                return nameAr[0];
+                for (int i = 0; i < 2; i++)
+                {
+                    mbSession.RawIO.Write("DATA:FRESH?");
+                    //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
+                    string readStr = mbSession.RawIO.ReadString();
+                    //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
+                    string[] separator = { "," };
+                    string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string[] separator2 = { "VDC" };
+                    nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
+                    nameAr[0] = nameAr[0].Replace(".", ",");
+                    double result = 0;
+                    if (double.TryParse(nameAr[0], out result) && nameAr[0] != "+9,9E37" && nameAr[0] != "-9,9E37")
+                    {
+                        return nameAr[0];
+                    };
+                }
+                return "OVRFLW";
             }
             catch (IOTimeoutException exp)
             {
@@ -689,8 +710,10 @@ namespace keithley
             try
             {
                 mbSession.RawIO.Write($"ROUT:OPEN:ALL");
+                Thread.Sleep(20);
                 mbSession.RawIO.Write($"ROUT:MULT:CLOS (@{portAddr},143)");
-                if(this.Function != prevChan.Function)
+                Thread.Sleep(20);
+                if (this.Function != prevChan.Function)
                 {
                     mbSession.RawIO.Write($"SENS:FUNC 'VOLT:AC'");
                 }
@@ -713,16 +736,24 @@ namespace keithley
                 {
                     mbSession.RawIO.Write($":SENS:VOLT:AC:AVER:STAT {FILT}");
                 }
-                mbSession.RawIO.Write("DATA:FRES?");
-                //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
-                string readStr = mbSession.RawIO.ReadString();
-                //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
-                string[] separator = { "," };
-                string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string[] separator2 = { "VAC" };
-                nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
-                nameAr[0] = nameAr[0].Replace(".", ",");
-                return nameAr[0];
+                for (int i = 0; i < 2; i++)
+                {
+                    mbSession.RawIO.Write("DATA:FRESH?");
+                    //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
+                    string readStr = mbSession.RawIO.ReadString();
+                    //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
+                    string[] separator = { "," };
+                    string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string[] separator2 = { "VAC" };
+                    nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
+                    nameAr[0] = nameAr[0].Replace(".", ",");
+                    double result = 0;
+                    if (double.TryParse(nameAr[0], out result) && nameAr[0] != "+9,9E37" && nameAr[0] != "-9,9E37")
+                    {
+                        return nameAr[0];
+                    };
+                }
+                return "OVRFLW";
             }
             catch (IOTimeoutException exp)
             {
@@ -739,7 +770,9 @@ namespace keithley
             try
             {
                 mbSession.RawIO.Write($"ROUT:OPEN:ALL");
+                Thread.Sleep(20);
                 mbSession.RawIO.Write($"ROUT:MULT:CLOS (@{portAddr},143)");
+                Thread.Sleep(20);
                 if (this.Function != prevChan.Function)
                 {
                     mbSession.RawIO.Write($"SENS:FUNC 'RES'");
@@ -756,18 +789,36 @@ namespace keithley
                 }
                 if (this.FILT != prevChan.FILT)
                 {
-                    mbSession.RawIO.Write($":SENS:VOLT:DC:AVER:STAT {FILT}");
+                    mbSession.RawIO.Write($":SENS:RES:AVER:STAT {FILT}");
                 }
-                mbSession.RawIO.Write("DATA:FRESH?");
-                //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
-                string readStr = mbSession.RawIO.ReadString();
-                //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
-                string[] separator = { "," };
-                string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string[] separator2 = { "OHM" };
-                nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
-                nameAr[0] = nameAr[0].Replace(".", ",");
-                return nameAr[0];
+                for (int i = 0; i < 2; i++)
+                {
+                    mbSession.RawIO.Write("DATA:FRESH?");
+                    //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
+                    string readStr = mbSession.RawIO.ReadString();
+                    //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
+                    string[] separator = { "," };
+                    string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string[] separator2 = { "OHM" };
+                    nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
+                    nameAr[0] = nameAr[0].Replace(".", ",");
+                    double result = 0;
+                    if (double.TryParse(nameAr[0], out result) && nameAr[0] != "+9,9E37" && nameAr[0] != "-9,9E37")
+                    {
+#warning ТЕСТ НАГРУЗКИ
+                        //ДЛЯ ТЕСТА НАГРУЗКИ
+                        double temp = 0;
+                        double A = 0.001125308852122;
+                        double B = 0.000234711863267;
+                        double C = 0.000000085663516;
+                        temp = 1 / (A + B * Math.Log(result) + C * Math.Pow(Math.Log(result), 3)) - 273.15;
+                        nameAr[0]= temp.ToString();
+                        //ДЛЯ ТЕСТА НАГРУЗКИ
+#warning ТЕСТ НАГРУЗКИ
+                        return nameAr[0];
+                    };
+                }
+                return "OVRFLW";
             }
             catch (IOTimeoutException exp)
             {
@@ -784,7 +835,9 @@ namespace keithley
             try
             {
                 mbSession.RawIO.Write($"ROUT:OPEN:ALL");
+                Thread.Sleep(20);
                 mbSession.RawIO.Write($"ROUT:MULT:CLOS (@{portAddr},{Pair},141,142,143)");
+                Thread.Sleep(20);
                 if (this.Function != prevChan.Function)
                 {
                     mbSession.RawIO.Write($"SENS:FUNC 'FRES'");
@@ -801,18 +854,26 @@ namespace keithley
                 }
                 if (this.FILT != prevChan.FILT)
                 {
-                    mbSession.RawIO.Write($":SENS:VOLT:DC:AVER:STAT {FILT}");
+                    mbSession.RawIO.Write($":SENS:FRES:AVER:STAT {FILT}");
                 }
-                mbSession.RawIO.Write("DATA:FRESH?");
-                //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
-                string readStr = mbSession.RawIO.ReadString();
-                //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
-                string[] separator = { "," };
-                string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string[] separator2 = { "OHM4W" };
-                nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
-                nameAr[0] = nameAr[0].Replace(".", ",");
-                return nameAr[0];
+                for(int i = 0; i < 2; i++)
+                {
+                    mbSession.RawIO.Write("DATA:FRESH?");
+                    //-6.26574010E-02VDC,+900.272SECS,+69495RDNG#  пример возвращаемой строки
+                    string readStr = mbSession.RawIO.ReadString();
+                    //string readStr = "-6.26574010E-02VDC,+900.272SECS,+69495RDNG#";
+                    string[] separator = { "," };
+                    string[] nameAr = readStr.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    string[] separator2 = { "OHM4W" };
+                    nameAr = nameAr[0].Split(separator2, StringSplitOptions.RemoveEmptyEntries);
+                    nameAr[0] = nameAr[0].Replace(".", ",");
+                    double result = 0;
+                    if (double.TryParse(nameAr[0], out result) && nameAr[0] != "+9,9E37" && nameAr[0] != "-9,9E37")
+                    {
+                        return nameAr[0];
+                    };
+                }
+                return "OVRFLW";
             }
             catch (IOTimeoutException exp)
             {
@@ -880,9 +941,9 @@ namespace keithley
                     return "V, DC";
                 case "ACV":
                     return "V, AC";
-                case "Ω2":
+                case "Ohm2":
                     return "Ohm";
-                case "Ω4":
+                case "Ohm4":
                     return "Ohm, 4W";
                 case "DCI":
                     return "A, DC";
@@ -906,8 +967,8 @@ namespace keithley
         {
             mbSession.RawIO.Write("DISP:TEXT:DATA 'TEST'");
             mbSession.RawIO.Write("DISP:TEXT:STAT ON");
-            DateTime dateTimeStart = new DateTime();
-            DateTime dateTimeEnd = new DateTime();
+            DateTime dateTimeStart;
+            DateTime dateTimeEnd;
             dateTimeStart = DateTime.Now;
             //string readValue = await Task.Run(() => this.readValue(mbSession)); //Считывание значения через класс
             readValueBool(mbSession, prevChan);

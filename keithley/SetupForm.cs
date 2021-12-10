@@ -207,6 +207,8 @@ namespace keithley
             info += chanInfo + separator;
             string modeInfo = $"Mode: {channels[selectedChannelsList.SelectedIndex].Function}";
             info += modeInfo + separator;
+            string rangeInfo = $"Range:{channels[selectedChannelsList.SelectedIndex].range}";
+            info += rangeInfo + separator;
             string NPLCInfo;
             if (channels[selectedChannelsList.SelectedIndex].bandWidth == "300" || channels[selectedChannelsList.SelectedIndex].Function != "ACV")
             {
@@ -222,15 +224,15 @@ namespace keithley
                 info += BWInfo + separator;
             }
             string pairInfo;
-            if (channels[selectedChannelsList.SelectedIndex].Function == "Ω4")
+            if (channels[selectedChannelsList.SelectedIndex].Function == "Ohm4")
             {
-                pairInfo = $"Pair: {channels[selectedChannelsList.SelectedIndex].Pair.Remove(0, 1)}";
+                pairInfo = $"Pair: {channels[selectedChannelsList.SelectedIndex].Pair}";
                 info += pairInfo + separator;
             }
             string shuntInfo;
             if (channels[selectedChannelsList.SelectedIndex].Function == "DCI" || channels[selectedChannelsList.SelectedIndex].Function == "ACI")
             {
-                shuntInfo = $"Shunt: {channels[selectedChannelsList.SelectedIndex].shuntRes}Ω";
+                shuntInfo = $"Shunt: {channels[selectedChannelsList.SelectedIndex].shuntRes}Ohm";
                 info += shuntInfo + separator;
             }
             ToolStripStatusLabel toolStripItem = new ToolStripStatusLabel(info);

@@ -19,7 +19,7 @@ namespace keithley {
     // с помощью такого средства, как ResGen или Visual Studio.
     // Чтобы добавить или удалить член, измените файл .ResX и снова запустите ResGen
     // с параметром /str или перестройте свой проект VS.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class adRes {
@@ -250,7 +250,7 @@ namespace keithley {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ω.
+        ///   Ищет локализованную строку, похожую на Ohm.
         /// </summary>
         internal static string ohm {
             get {
